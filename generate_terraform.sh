@@ -14,50 +14,50 @@ function generate_terraform () {
     do
       RS=`echo ${tmp2} | jq -r -c .name`
       ID2=`echo ${tmp2//serverFarms/serverfarms} | jq -r -c .id`
-      echo ${ID2} | grep ' '
-      if $? == 0
+      echo ${ID2} | grep -q ' '
+      if [ $? = 0 ]
       then
-	echo "Canceled because there is a space in the ID."
-	echo "id: ${ID2}"
-	break
+	      echo "Canceled because there is a space in the ID."
+	      echo "id: ${ID2}"
+	      break
       fi
       a_type=`echo ${tmp2} | jq -r -c .type`
       line_count=`awk -F, -v a_type=${a_type} '$2==a_type{print $0}' resource.csv | wc -l`
       printf "resource_name: %s\nid: %s\nazure_resource_type: %s\n\n" ${RS} ${ID2} ${a_type}
       case ${line_count} in
-	0)
-	  read -p "Resource type not found for terraform. please enter manually. or input n ex)azurerm_function_app > " t_type
+	      0)
+	        read -p "Resource type not found for terraform. please enter manually. or input n ex)azurerm_function_app > " t_type
           if [[ ${t_type} =~ (n|N|no|No) ]]
           then
             echo "skip"
           else
-	    echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
-            terraform import ${t_type}.${RS} "${ID2}"
-            terraform state show -no-color ${t_type}.${RS} | grep -v sensitive >> ./${target_dir}/${RG}.tf
-	    printf "%s\n" "${t_type}.${RS} generated."
-	  fi
-	  ;;
-        1)
-	  t_type=`awk -F, -v type=${a_type} '$2==type{print $1}' resource.csv`
-	  echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
+	        echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
           terraform import ${t_type}.${RS} "${ID2}"
           terraform state show -no-color ${t_type}.${RS} | grep -v sensitive >> ./${target_dir}/${RG}.tf
-	  printf "%s\n" "${t_type}.${RS} generated."
-	  ;;
+	        printf "%s\n" "${t_type}.${RS} generated."
+	        fi
+	        ;;
+        1)
+	        t_type=`awk -F, -v type=${a_type} '$2==type{print $1}' resource.csv`
+	        echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
+          terraform import ${t_type}.${RS} "${ID2}"
+          terraform state show -no-color ${t_type}.${RS} | grep -v sensitive >> ./${target_dir}/${RG}.tf
+	        printf "%s\n" "${t_type}.${RS} generated."
+	        ;;
         [2-9] )
-	  PS3="Multiple resource types found. Please select one. >"
-	  select t_type in `awk -F, -v type=${a_type} '$2==type{print $1}' resource.csv`
+	        PS3="Multiple resource types found. Please select one. >"
+	        select t_type in `awk -F, -v type=${a_type} '$2==type{print $1}' resource.csv`
           do
-	    echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
+	          echo "resource \"${t_type}\" \"${RS}\" {}" > ./tmp.tf
             terraform import ${t_type}.${RS} "${ID2}"
             terraform state show -no-color ${t_type}.${RS} | grep -v sensitive >> ./${target_dir}/${RG}.tf
-	    printf "%s\n" "${t_type}.${RS} generated."
-	    break
+	          printf "%s\n" "${t_type}.${RS} generated."
+	          break
           done
           ;;
-	* )
-	  echo "NG"
-	  ;;
+	      * )
+	        echo "NG"
+	        ;;
       esac
       rm -f tmp.tf
     done

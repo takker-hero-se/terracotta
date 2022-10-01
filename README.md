@@ -16,10 +16,10 @@ Output the resources in the Azure subscription as files as Terraform resource de
 
 # Execution method
 
-See resource.csv for corresponding resources
+Check resource.csv for corresponding resources
 
 ``` bash
-https://github.com/takker0708/terracotta.git
+git clone https://github.com/takker0708/terracotta.git
 cd terracotta
 az login
 terraform init

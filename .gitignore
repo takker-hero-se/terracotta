@@ -1,0 +1,4 @@
+.terraform/
+define/
+
+.terraform.lock.hcl
