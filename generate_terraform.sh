@@ -22,7 +22,7 @@ function generate_terraform () {
 	      break
       fi
       a_type=`echo ${tmp2} | jq -r -c .type`
-      line_count=`awk -F, -v a_type=${a_type} '$2==a_type{print $0}' resource.csv | wc -l`
+      line_count=`awk -F, -v a_type=${a_type} '$2==a_type{print $0}' resource.csv | wc -l | tr -d ' '`
       printf "resource_name: %s\nid: %s\nazure_resource_type: %s\n\n" ${RS} ${ID2} ${a_type}
       case ${line_count} in
 	      0)
@@ -56,7 +56,7 @@ function generate_terraform () {
           done
           ;;
 	      * )
-	        echo "NG"
+                printf "%s: %s¥n" NG:line_count: ${line_count}
 	        ;;
       esac
       rm -f tmp.tf
